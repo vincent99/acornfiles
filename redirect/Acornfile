@@ -9,7 +9,7 @@ args: {
   permanent: false
 }
 
-containers: nginx: {
+containers: web: {
   image:  "nginx"
   scale:  args.replicas
   expose: "80:80/http"

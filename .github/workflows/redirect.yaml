@@ -1,0 +1,30 @@
+name: Redirect
+on:
+  push:
+    paths:
+      - redirect/**
+      - .github/workflows/redirect.yaml
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: acorn-io/actions-setup@v1
+        with:
+          token: ${{secrets.ACORN_TOKEN}}
+      - uses: acorn-io/actions-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.repository_owner}}
+          password: ${{secrets.GITHUB_TOKEN}}
+      - name: Build & Push
+        run: |
+          cd redirect
+          acorn build -t ghcr.io/${{github.repository_owner}}/registry:latest .
+          acorn push ghcr.io/${{github.repository_owner}}/registry:latest
+
+permissions:
+  packages: write
