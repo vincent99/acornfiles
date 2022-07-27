@@ -12,7 +12,7 @@ args: {
 containers: web: {
   image:  "nginx"
   scale:  args.replicas
-  ports: publish: "80/http"
+  expose: "80:80/http"
 
   files: {
     "/etc/nginx/nginx.conf": "secret://nginx-conf/template"
