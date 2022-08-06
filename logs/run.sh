@@ -1,9 +1,10 @@
 #!/bin/sh
 while true; do
-  if [ $RANDOM % 2 == 0 ]; then
+  WHICH=$(( $RANDOM % 2 ))
+  if [ $WHICH == 0 ]; then
     echo "STDOUT - $(hostname) - $(date)"
   else
-    echo "STDOUT - $(hostname) - $(date)" >&2
+    echo "STDERR - $(hostname) - $(date)" >&2
   fi
 
   sleep $(( $RANDOM % 10 + 1))
