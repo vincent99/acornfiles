@@ -1,0 +1,10 @@
+args: {
+  replicas: 1
+}
+
+containers: default: {
+  scale: args.replicas
+  build: {
+    context: "."
+  }
+}

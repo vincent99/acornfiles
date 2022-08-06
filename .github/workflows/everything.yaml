@@ -1,9 +1,9 @@
-name: Redirect
+name: Everything
 on:
   push:
     paths:
-      - redirect/**
-      - .github/workflows/redirect.yaml
+      - everything/**
+      - .github/workflows/everything.yaml
     branches:
       - main
 
@@ -23,7 +23,7 @@ jobs:
           password: ${{secrets.REGISTRY_PASSWORD}}
       - name: Build & Push
         run: |
-          DIR=redirect
+          DIR=everything
           cd ${DIR}
           acorn build -t ghcr.io/${{github.repository_owner}}/${DIR}:latest .
           acorn push ghcr.io/${{github.repository_owner}}/${DIR}:latest

@@ -1,0 +1,196 @@
+args: {
+  // The message
+  msg: "Hello World"
+
+  // A number
+  replicas: 1
+
+  // An enum
+  enum:  *"foo" | "bar" | "baz"
+
+  volume: true
+  sidecar: true
+  basicSecret: true
+  templateSecret: true
+  job: true
+}
+
+profiles: {
+  dev: {
+    msg: "Hello dev"
+  }
+
+  stg: {
+    msg: "Hello stg"
+    replicas: 2
+  }
+
+  prod: {
+    msg: "Hello prod"
+  }
+}
+
+secrets: {
+  "nginx-conf": {
+    type: "template"
+    data: {
+      template: """
+      user  nginx;
+      worker_processes  auto;
+
+      error_log  /var/log/nginx/error.log notice;
+      pid    /var/run/nginx.pid;
+
+      events {
+        worker_connections  1024;
+      }
+
+      http {
+        include     /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                  '$status $body_bytes_sent "$http_referer" '
+                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+        access_log  /var/log/nginx/access.log  main;
+
+        sendfile    on;
+        #tcp_nopush   on;
+
+        keepalive_timeout  65;
+
+        #gzip  on;
+
+        include /etc/nginx/conf.d/*.conf;
+      }
+      """
+    }
+  }
+
+  "nginx-server-blocks": {
+    type: "opaque"
+    data: {
+    "default.conf": """
+      server {
+        listen     80;
+        listen  [::]:80;
+        server_name  localhost;
+
+        location / {
+          root   /usr/share/nginx/html;
+          index  index.html index.htm;
+        }
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+          root   /usr/share/nginx/html;
+        }
+      }
+      """
+    }
+  }
+
+  if args.basicSecret {
+    "basic": {
+      type: "basic" // required
+      data: {
+        username: "" //optional
+        password: "" //optional
+      }
+    }
+  }
+
+  if args.templateSecret {
+    "tpl": {
+      type: "template"
+      data: {
+        template: """
+        A templated ${secret://opaque/key}
+        """
+      }
+    }
+
+    "opaque": {
+      type: "opaque"
+      data: {
+        key: "value"
+      }
+    }
+  }
+}
+
+volumes: shared: {}
+
+if  args.volume {
+  volumes: avolume: {}
+}
+
+containers: nginx: {
+  image:  "nginx"
+  scale:  args.replicas
+  ports: "80/http"
+
+  dirs: {
+    "/usr/share/nginx/html/shared": "volume://shared"
+  }
+
+  files: {
+    "/etc/nginx/nginx.conf": "secret://nginx-conf/template"
+    "/usr/share/nginx/html/index.html": "<h1>Msg: \(args.msg)</h1><h5>Enum: \(args.enum)</h5><br/><a href=\"shared/cron.html\">Cron</a> <a href=\"shared/sidecar.html\">Sidecar</a> <a href=\"bind/\">Bind</a>"
+  }
+
+  dirs: {
+    "/etc/nginx/conf.d": "secret://nginx-server-blocks"
+    "/usr/share/nginx/html/bind": "./bind"
+  }
+
+  if args.sidecar {
+    sidecars: {
+      side: {
+        image: "ubuntu:latest"
+        init:  true
+        dirs: {
+          "/usr/share/nginx/html/shared": "volume://shared"
+        }
+        files: {
+          "/acorn/init.sh": """
+          #!/bin/sh
+          echo "<h1>Sidecar: $1</h1>" > /usr/share/nginx/html/shared/sidecar.html
+          exit 0
+          """
+        }
+        entrypoint: "/bin/sh /acorn/init.sh"
+        command: [
+          "\(args.msg)",
+        ]
+      }
+    }
+  }
+
+  if args.volume {
+    dirs: {
+      "/usr/share/nginx/html/avolume": "volume://avolume"
+    }
+  }
+}
+
+if args.job {
+  jobs: fivemin: {
+    schedule: "*/5 * * * *"
+    image: "ubuntu:latest"
+    dirs: {
+      "/usr/share/nginx/html/shared": "volume://shared"
+    }
+    files: {
+      "/acorn/init.sh": """
+      #!/bin/sh
+      date > /usr/share/nginx/html/shared/cron.html
+      exit 0
+      """
+    }
+    entrypoint: "/bin/sh /acorn/init.sh"
+  }
+}
