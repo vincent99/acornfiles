@@ -25,6 +25,6 @@ jobs:
         run: |
           DIR=redirect
           cd ${DIR}
-          acorn build -t ghcr.io/${{github.repository_owner}}/${DIR}:latest .
+          acorn build -t ghcr.io/${{github.repository_owner}}/${DIR}:latest -p linux/amd64 -p linux/arm64 .
           acorn push ghcr.io/${{github.repository_owner}}/${DIR}:latest
 
