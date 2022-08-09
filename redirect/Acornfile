@@ -9,7 +9,7 @@ args: {
   permanent: false
 }
 
-containers: web: {
+containers: default: {
   image:  "nginx"
   scale:  args.replicas
   ports: publish: "80/http"
