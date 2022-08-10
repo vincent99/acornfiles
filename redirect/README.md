@@ -5,7 +5,7 @@ Redirect requests to another URL
 ## Usage
 
 ```bash
-acorn run -P vincent99/redirect --target URL [--permanent]
+acorn run -P ghcr.io/vincent99/redirect --target URL [--permanent]
 ```
 
 ## Options
