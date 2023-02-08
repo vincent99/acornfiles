@@ -1,0 +1,67 @@
+// a <--10kBps--- b <--20,30--- {c, d} <--40,50--- e <--60--- b
+args: {
+  nodes: 5
+  debug: false
+}
+
+localData: {
+  debugStr: std.ifelse(args.debug, "true", "false")
+}
+
+containers: {
+  a: {
+    build: "."
+    ports: publish: "8080/http"
+    env: {
+      DEBUG: localData.debugStr
+      if ( args.nodes > 1) {
+        TARGET_B: "b:8080,10000,1"
+      }
+    }
+  }
+
+  if (args.nodes >= 2) {
+    b: {
+      build: "."
+      ports: expose: "8080/http"
+      env: {
+        DEBUG: localData.debugStr
+        TARGET_C: "c:8080,20000,1"
+        TARGET_D: "d:8080,15000,0.5"
+      }
+    }
+  }
+
+  if (args.nodes >= 3) {
+    c: {
+      build: "."
+      ports: expose: "8080/http"
+      env: {
+        DEBUG: localData.debugStr
+        TARGET_E: "e:8080,40000,1"
+      }
+    }
+  }
+
+  if (args.nodes >= 4) {
+    d: {
+      build: "."
+      ports: expose: "8080/http"
+      env: {
+        DEBUG: localData.debugStr
+        TARGET_E: "e:8080,100000,0.5"
+      }
+    }
+  }
+
+  if (args.nodes >= 5) {
+    e: {
+      build: "."
+      ports: expose: "8080/http"
+      env: {
+        DEBUG: localData.debugStr
+        TARGET_B: "b:8080,60000,1"
+      }
+    }
+  }
+}
