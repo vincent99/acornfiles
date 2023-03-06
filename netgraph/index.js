@@ -58,7 +58,7 @@ http.createServer((req, res) => {
     status = errorCodes[crypto.randomInt(0,errorCodes.length)]
   }
 
-  res.writeHead(200, {'Content-Type': 'text/plain'})
+  res.writeHead(status, {'Content-Type': 'text/plain'})
   const intro = `${id} ${status} ${bytes} ${message}\n`
   bytes -= intro.length
   res.write(intro)

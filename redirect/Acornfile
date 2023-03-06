@@ -1,6 +1,6 @@
 args: {
-  // Absolute URL to redirect to
-  target: "https://acorn.io"
+  // Absolute URL to redirect to (required)
+  target: string | *""
 
   // Set to true to return permanent redirect (301) instead of temporary (302)
   permanent: false
